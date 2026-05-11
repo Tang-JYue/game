@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/new/prefix1">
+        <file>C:/Users/17602/Desktop/wall1.png</file>
+        <file>C:/Users/17602/Desktop/player.png</file>
+        <file>C:/Users/17602/Desktop/item1.png</file>
+        <file>C:/Users/17602/Desktop/item2.png</file>
+        <file>C:/Users/17602/Desktop/item3.png</file>
+        <file>C:/Users/17602/Desktop/item4.png</file>
+        <file>C:/Users/17602/Desktop/item5.png</file>
+        <file>C:/Users/17602/Desktop/item6.png</file>
+        <file>C:/Users/17602/Desktop/item7.png</file>
+        <file>C:/Users/17602/Desktop/item8.png</file>
+    </qresource>
+</RCC>
