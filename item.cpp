@@ -6,14 +6,14 @@ const int Item::ITEM_SCORES[8] = {1, 2, 3, 5, 8, 10, 15, 20};
 
 // 物品图片路径
 const QString Item::ITEM_PATHS[8] = {
-    "C:/Users/17602/Desktop/item1.png",
-    "C:/Users/17602/Desktop/item2.png",
-    "C:/Users/17602/Desktop/item3.png",
-    "C:/Users/17602/Desktop/item4.png",
-    "C:/Users/17602/Desktop/item5.png",
-    "C:/Users/17602/Desktop/item6.png",
-    "C:/Users/17602/Desktop/item7.png",
-    "C:/Users/17602/Desktop/item8.png"
+    ":/new/prefix1/item01.png",
+    ":/new/prefix1/item02.png",
+    ":/new/prefix1/item03.png",
+    ":/new/prefix1/item04.png",
+    ":/new/prefix1/item05.png",
+    ":/new/prefix1/item06.png",
+    ":/new/prefix1/item07.png",
+    ":/new/prefix1/item08.png",
 };
 
 Item::Item(QObject *parent) : QObject(parent)

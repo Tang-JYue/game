@@ -6,7 +6,7 @@
 WallView::WallView(QWidget *parent) : QWidget(parent)
 {
     // 先尝试加载图片，如果失败则使用默认纹理
-    QString wallImagePath = "C:/Users/17602/Desktop/wall1.png";
+    QString wallImagePath = ":/new/prefix1/wall1.png";
     if (!loadWallTexture(wallImagePath)) {
         createDefaultWallTexture();
     }

@@ -78,3 +78,4 @@ void PlayerView::createDefaultPlayerImage()
     painter.setPen(QPen(Qt::black, 2));
     painter.drawArc(5, 20, 10, 10, 180 * 16, 180 * 16);
 }
+
