@@ -39,9 +39,7 @@ private slots:
     void onShowStoryFragmentView(const QString& story, const QString& imagePath);
     void onRestartGame();
     void onQuitGame();
-    //+++++++++++++++++++++++++
     void onFinalStoryTriggered();
-    //++++++++++++++++++++++++++++++
 
 private:
     void setupUI();

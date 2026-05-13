@@ -16,6 +16,7 @@
 #include "itemview.h"
 #include "gamecontroller.h"
 #include "storyfragmentview.h"
+#include "failview.h"
 
 
 GameWindow::GameWindow(QWidget *parent) : QWidget(parent)
@@ -176,17 +177,20 @@ void GameWindow::onPlayerDied()
 {
     qDebug() << "玩家死亡！游戏结束";
 
-    if (gameController) {
-        gameController->stopGame();
-    }
+        if (gameController) {
+            gameController->stopGame();  // 停止游戏循环
+        }
 
-    QMessageBox::critical(this, "游戏结束",
-        "很遗憾，游戏失败，你将永远留在迷宫\n"
-        "达成结局：迷宫中的幽灵\n"
-        "最终分数: " + QString::number(gameController->getTotalScore()) + "\n"
-        "收集物品: " + QString::number(gameController->getItemsCollected()) + "个");
+        // +++ 使用新的 FailView 替换 QMessageBox +++
+        FailView *failView = new FailView(this);
+        failView->setAttribute(Qt::WA_DeleteOnClose);
 
-    onRestartGame();
+        // 连接信号
+        connect(failView, &FailView::restartRequested, this, &GameWindow::onRestartGame);
+        connect(failView, &FailView::quitRequested, this, &GameWindow::onQuitGame);
+
+        // 显示失败窗口
+        failView->exec();
 }
 
 void GameWindow::onItemCollected(int score, int total)
@@ -236,7 +240,6 @@ void GameWindow::onShowStoryFragmentView(const QString& story, const QString& im
     }
 }
 
-//+++ 新增槽函数：显示最终的故事（大结局） +++
 void GameWindow::onFinalStoryTriggered()
 {
     // 游戏暂停
@@ -248,14 +251,12 @@ void GameWindow::onFinalStoryTriggered()
     FinalStoryView *view = new FinalStoryView(this);
     view->setAttribute(Qt::WA_DeleteOnClose);
 
-    // 连接对话框关闭信号
-    connect(view, &FinalStoryView::finished, this, [this](){
-        onRestartGame();
-    });
+    // 连接对话框按钮信号
+    connect(view, &FinalStoryView::accepted, this, &GameWindow::onRestartGame);
+    connect(view, &FinalStoryView::rejected, this, &GameWindow::onQuitGame);
 
     view->exec();
 }
-//++++++++++++++++++++++++++++++++++++++++++++
 
 void GameWindow::onRestartGame()
 {
@@ -312,6 +313,7 @@ void GameWindow::onRestartGame()
 
 void GameWindow::onQuitGame()
 {
-    close();
+    qDebug() << "用户选择退出游戏";
+    QApplication::quit();  // 退出整个应用程序
 }
 

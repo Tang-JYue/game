@@ -13,7 +13,6 @@ class FinalStoryView : public QDialog
     Q_OBJECT
 
 public:
-    // 构造函数不再接收参数
     explicit FinalStoryView(QWidget *parent = nullptr);
     ~FinalStoryView();
 
@@ -26,7 +25,8 @@ private:
 
     // UI控件
     QTextBrowser *m_textBrowser;   // 文本区域
-    QPushButton *m_closeButton;    // 关闭按钮
+    QPushButton *m_restartButton;  // restart按钮
+    QPushButton *m_quitButton;     // off按钮
     QVBoxLayout *m_mainLayout;     // 主布局
 
     // 数据成员

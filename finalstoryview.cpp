@@ -51,118 +51,136 @@ FinalStoryView::FinalStoryView(QWidget *parent)
         "三座火山静静矗立，而玫瑰，正在玻璃罩下安然无恙。\n\n\n"
         "重要的东西，眼睛是看不见的。\n\n"
         "达成结局：回家\n\n\n"
-        "—— 故事收集游戏 · 完结 ——";
+        "  —— Rose, Labyrinth, Home · 完结 ——";
 
     // 2. 设置窗口属性
-    this->setWindowTitle("大结局 - 小王子的回归");
-    this->setFixedSize(1200, 800);
+    this->setWindowTitle("大结局 - 回归");
+    this->setFixedSize(1200, 850);  // 适当增大窗口
 
     // 3. 加载背景图
     loadBackgroundImage();
 
-    // 4. 设置对话框为无边框，实现更沉浸式的体验
-    this->setWindowFlags(this->windowFlags() | Qt::FramelessWindowHint);
-
-    // 5. 创建主布局
+    // 4. 创建主布局
     m_mainLayout = new QVBoxLayout(this);
-    m_mainLayout->setContentsMargins(0, 0, 0, 0);  // 移除所有边距
+    m_mainLayout->setContentsMargins(0, 0, 0, 0);
     m_mainLayout->setSpacing(0);
 
-    // 6. 创建文本区域
+    // 5. 创建文本区域
     m_textBrowser = new QTextBrowser(this);
     m_textBrowser->setMinimumSize(1200, 700);
 
-    // 设置QTextBrowser的字体
+    // 6. 设置字体
     QFont textFont;
-    textFont.setPointSize(16);
-    textFont.setFamily("Microsoft YaHei");
-    textFont.setBold(true);
-    textFont.setStyleStrategy(QFont::PreferAntialias);
+    textFont.setPointSize(13);
+    textFont.setFamily("SimHei");
     m_textBrowser->setFont(textFont);
 
-    // 设置文本区域样式 - 完全透明，无边框，无滚动条
+    // 7. 设置文本区域样式
     m_textBrowser->setStyleSheet(
         "QTextBrowser {"
-        "  border: none;"                     // 无边框
-        "  background-color: transparent;"    // 完全透明
-        "  color: black;"                    // 黑色文字
-        "  padding: 100px 150px;"           // 增大内边距
-        "  line-height: 1.6;"               // 增大行高
+        "  border: none;"
+        "  background-color: transparent;"
+        "  color: black;"
+        "  padding: 50px 80px;"
+        "  line-height: 1.8;"
         "}"
     );
 
-    // +++ 关键修改：禁用滚动条 +++
-    m_textBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);  // 始终关闭垂直滚动条
-    m_textBrowser->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // 也关闭水平滚动条
+    // 8. 禁用滚动条
+    m_textBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_textBrowser->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    // 7. 设置文本格式
+    // 9. 设置文本格式
     m_textBrowser->setPlainText(m_storyText);
-    m_textBrowser->setAlignment(Qt::AlignCenter);
+    m_textBrowser->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     m_textBrowser->setWordWrapMode(QTextOption::WordWrap);
     m_textBrowser->setLineWrapMode(QTextBrowser::WidgetWidth);
 
-    // 8. 为文字添加阴影效果
+    // 10. 为最后一行设置特殊格式（花体字）
+    QTextCursor cursor = m_textBrowser->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::KeepAnchor);
+
+    QTextCharFormat format;
+    QFont font;
+    font.setFamily("Brush Script MT");
+    font.setPointSize(16);
+    font.setItalic(true);
+    format.setFont(font);
+    format.setForeground(QColor("#e8a0c8"));  // 淡粉色
+    cursor.mergeCharFormat(format);
+
+    // 11. 为文字添加阴影效果
     QGraphicsDropShadowEffect *textShadow = new QGraphicsDropShadowEffect();
     textShadow->setBlurRadius(10);
     textShadow->setColor(QColor(255, 255, 255, 150));
     textShadow->setOffset(2, 2);
     m_textBrowser->setGraphicsEffect(textShadow);
 
-    // 9. 创建关闭按钮区域
-    // +++ 关键修改1：将文本区域添加到主布局，并设置拉伸因子 +++
-    // 参数1：拉伸因子为1，表示文本区域会占据所有可用空间
     m_mainLayout->addWidget(m_textBrowser, 1);
 
-    // 2. 创建底部按钮区域
-    // 创建一个容器widget来放置按钮，方便样式控制
-    QWidget *buttonContainer = new QWidget(this);
-    buttonContainer->setFixedHeight(100);  // 固定按钮区域高度
-    buttonContainer->setStyleSheet(
-        "background-color: rgba(0, 0, 0, 0);"  // 完全透明背景
-    );
+    // 12. 创建底部按钮区域
+       QWidget *buttonContainer = new QWidget(this);
+       buttonContainer->setFixedHeight(100);  // 固定按钮区域高度
+       buttonContainer->setStyleSheet(
+           "background-color: rgba(0, 0, 0, 0);"  // 完全透明背景
+       );
 
-    QHBoxLayout *buttonLayout = new QHBoxLayout(buttonContainer);
-    buttonLayout->setContentsMargins(0, 0, 0, 20);  // 底部边距20px
-    buttonLayout->setSpacing(0);
+       QHBoxLayout *buttonLayout = new QHBoxLayout(buttonContainer);
+       buttonLayout->setContentsMargins(40, 0, 40, 20);  // 底部边距20px
+       buttonLayout->setSpacing(150);  // 按钮间距
 
-    // 添加左侧弹性空间
-    buttonLayout->addStretch();
+       // 添加弹性空间使按钮居中
+       buttonLayout->addStretch();
 
-    // 创建关闭按钮
-    m_closeButton = new QPushButton("关闭并重新开始", buttonContainer);
-    m_closeButton->setFixedSize(200, 50);
+       // 创建restart按钮
+       m_restartButton = new QPushButton("restart", buttonContainer);
+       m_restartButton->setFixedSize(150, 50);
 
-    m_closeButton->setStyleSheet(
-        "QPushButton {"
-        "  background-color: rgba(46, 204, 113, 180);"
-        "  color: white;"
-        "  border: 2px solid rgba(39, 174, 96, 200);"
-        "  border-radius: 8px;"
-        "  font-size: 18px;"
-        "  font-weight: bold;"
-        "  padding: 10px 30px;"
-        "}"
-        "QPushButton:hover {"
-        "  background-color: rgba(39, 174, 96, 220);"
-        "  border: 2px solid rgba(33, 150, 83, 220);"
-        "}"
-    );
+       // 创建off按钮
+       m_quitButton = new QPushButton("off", buttonContainer);
+       m_quitButton->setFixedSize(150, 50);
 
-    connect(m_closeButton, &QPushButton::clicked, this, &FinalStoryView::accept);
+       // 设置按钮样式为浅白色框
+       QString buttonStyle =
+           "QPushButton {"
+           "  background-color: rgba(255, 255, 255, 180);"  // 浅白色背景
+           "  color: #2c3e50;"                              // 深灰色文字
+           "  border: 2px solid rgba(200, 200, 200, 200);"  // 浅灰色边框
+           "  border-radius: 8px;"
+           "  font-size: 25px;"
+           "  font-weight: bold;"
+           "  padding: 10px 20px;"
+           "}"
+           "QPushButton:hover {"
+           "  background-color: rgba(240, 240, 240, 200);"
+           "  border: 2px solid rgba(180, 180, 180, 220);"
+           "}"
+           "QPushButton:pressed {"
+           "  background-color: rgba(230, 230, 230, 220);"
+           "  border: 2px solid rgba(160, 160, 160, 240);"
+           "}";
 
-    buttonLayout->addWidget(m_closeButton);
+       m_restartButton->setStyleSheet(buttonStyle);
+       m_quitButton->setStyleSheet(buttonStyle);
 
-    // 添加右侧弹性空间
-    buttonLayout->addStretch();
+       // 将按钮添加到布局
+       buttonLayout->addWidget(m_restartButton);
+       buttonLayout->addWidget(m_quitButton);
 
-    // +++ 关键修改2：将按钮容器添加到主布局，不设置拉伸因子 +++
-    // 这样按钮区域会保持在底部，不会挤压文本区域
-    m_mainLayout->addWidget(buttonContainer, 0, Qt::AlignBottom);
+       buttonLayout->addStretch();
 
-    this->setLayout(m_mainLayout);
+       // 13. 将按钮容器添加到主布局
+       m_mainLayout->addWidget(buttonContainer, 0, Qt::AlignBottom);
 
-    qDebug() << "FinalStoryView 创建完成，按钮已固定到底部";
-}
+       this->setLayout(m_mainLayout);
+
+       // 14. 连接按钮信号
+       connect(m_restartButton, &QPushButton::clicked, this, &FinalStoryView::accept);
+       connect(m_quitButton, &QPushButton::clicked, this, &FinalStoryView::reject);
+
+       qDebug() << "FinalStoryView 创建完成，添加了两个按钮：restart 和 off";
+   }
 
 // 加载背景图的函数
 void FinalStoryView::loadBackgroundImage()

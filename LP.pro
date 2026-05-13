@@ -37,6 +37,9 @@ SOURCES += \
     gamewindow.cpp \
     storyfragmentview.cpp \
     finalstoryview.cpp \
+    startwindow.cpp \
+    rulewindow.cpp \
+    failview.cpp \
 
 HEADERS += \
     wall.h \
@@ -51,6 +54,9 @@ HEADERS += \
     gamewindow.h \
     storyfragmentview.h \
     finalstoryview.h \
+    startwindow.h \
+    rulewindow.h \
+    failview.h \
 
 RESOURCES += \
     resources.qrc
