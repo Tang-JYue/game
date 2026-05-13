@@ -29,7 +29,6 @@ private:
     int maxHealth = 0;
     int currentScore = 0;
     int itemsCollected = 0;
-    bool doorOpen = false;
 };
 
 #endif // HEALTHVIEW_H

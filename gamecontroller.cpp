@@ -5,7 +5,6 @@
 #include "healthview.h"
 #include "item.h"
 #include "itemview.h"
-#include "door.h"
 #include "storyfragment.h"
 
 #include <QKeyEvent>
@@ -14,6 +13,8 @@
 #include <QMessageBox>
 #include <QtMath>
 #include <QSet>
+#include <QPainter>
+#include <QPen>
 #include <algorithm>
 #include <cstdlib>
 
@@ -21,7 +22,7 @@
 static bool randomSeeded = false;
 
 // 在.cpp文件中定义常量
-const int GameController::DOOR_SCORE_THRESHOLD = 560;
+const int GameController::DOOR_SCORE_THRESHOLD = 612;
 const int GameController::COLLISION_COOLDOWN_FRAMES = 10;
 
 GameController::GameController(QObject *parent) : QObject(parent)
@@ -48,14 +49,13 @@ GameController::~GameController()
 }
 
 void GameController::initialize(Player* p, PlayerView* pv, Wall* w,
-                               HealthView* hv, ItemView* iv, Door* d)
+                               HealthView* hv, ItemView* iv)
 {
     player = p;
     playerView = pv;
     wall = w;
     healthView = hv;
     itemView = iv;
-    door = d;
 
     // 设置边界为迷宫的实际大小
     if (wall) {
@@ -76,7 +76,7 @@ void GameController::initialize(Player* p, PlayerView* pv, Wall* w,
     generateItems(8);
 
     qDebug() << "游戏控制器初始化完成";
-    qDebug() << "目标: 收集560分打开门";
+    qDebug() << "目标: 收集612分";
 }
 
 void GameController::startGame()
@@ -157,6 +157,7 @@ void GameController::handleKeyPress(QKeyEvent* event)
             readCurrentItemStory();
         }
         break;
+
     }
 }
 
@@ -190,11 +191,6 @@ int GameController::getItemsCollected() const
     return itemsCollected;
 }
 
-bool GameController::isDoorOpen() const
-{
-    return doorOpen;
-}
-
 int GameController::getRandomInt(int min, int max)
 {
     if (min >= max) return min;
@@ -225,30 +221,43 @@ void GameController::clearItems()
 
 void GameController::collectCurrentItem()
 {
-    if (!currentItem || currentItem->isCollected()) return;
+    // === 1. 基础检查 ===
+    if (!currentItem || currentItem->isCollected()) {
+        qDebug() << "[GameController] 收集物品失败: 物品无效或已收集";
+        return;
+    }
 
+    // === 2. 执行收集 ===
     currentItem->setCollected(true);
     int score = currentItem->getScore();
     totalScore += score;
     itemsCollected++;
 
-    qDebug() << "收集物品，获得" << score << "分，总分数:" << totalScore
-             << "，已收集物品数:" << itemsCollected;
     emit itemCollected(score, totalScore);
     currentItem->setShowPrompt(false);
 
-    if (totalScore >= DOOR_SCORE_THRESHOLD && !doorOpen) {
-        doorOpen = true;
-        if (door) {
-            door->setOpen(true);
-        }
-        emit doorOpened();
-        qDebug() << "已达到目标分数560，门已打开！";
+    if (totalScore >= DOOR_SCORE_THRESHOLD) {
+        qDebug() << "★★★★★★★★★★★★★★★★★★★★★★★★";
+        qDebug() << "★ 分数达标！触发最终结局。 ★";
+        qDebug() << "★ 总收集物品:" << itemsCollected << "个 ★";
+        qDebug() << "★ 最终分数:" << totalScore << "分 ★";
+        qDebug() << "★★★★★★★★★★★★★★★★★★★★★★★★";
+
+        // 发射最终故事信号
+         emit finalStoryTriggered();
+
+        // 游戏胜利，停止游戏循环
+        emit gameWon();
+        stopGame();
+        return; // 重要：触发结局后，直接返回，不再执行后续的 currentItem = nullptr 等清理
     }
 
+    // === 5. 后续清理 ===
     currentItem = nullptr;
     if (itemView) itemView->setItems(items);
     if (healthView) healthView->updateDisplay();
+
+    qDebug() << "[GameController] collectCurrentItem 函数结束";
 }
 
 void GameController::readCurrentItemStory()
@@ -260,8 +269,7 @@ void GameController::readCurrentItemStory()
         StoryFragment* fragment = storyFragments[itemType];
         if (!fragment->isRead()) {
             fragment->setRead(true);
-            currentStory = fragment->getContent();
-            emit showStoryDialog(currentStory);
+            emit showStoryFragmentView(fragment->getContent(), fragment->getImagePath());
             qDebug() << "阅读故事碎片" << itemType + 1;
         }
     }
@@ -272,7 +280,7 @@ void GameController::showStoryFragment(int itemType)
     if (itemType >= 0 && itemType < storyFragments.size()) {
         StoryFragment* fragment = storyFragments[itemType];
         currentStory = fragment->getContent();
-        emit showStoryDialog(currentStory);
+        emit showStoryFragmentView(fragment->getContent(), fragment->getImagePath());
     }
 }
 
@@ -284,7 +292,6 @@ void GameController::updateGame()
     checkBoundaries();
     if (wall) processWallCollision();
     processItemCollision();
-    processDoorCollision();
 }
 
 void GameController::processPlayerMovement()
@@ -421,39 +428,57 @@ void GameController::processItemCollision()
     }
 }
 
-void GameController::processDoorCollision()
-{
-    if (!player || !door || !door->isOpen()) return;
-
-    if (player->getBoundingBox().intersects(door->getBoundingBox())) {
-        qDebug() << "★★★★★★★★★★★★★★★★★★★★★★★★";
-        qDebug() << "★ 游戏胜利！玩家成功通过门！ ★";
-        qDebug() << "★ 总收集物品:" << itemsCollected << "个 ★";
-        qDebug() << "★ 最终分数:" << totalScore << "分 ★";
-        qDebug() << "★★★★★★★★★★★★★★★★★★★★★★★★";
-        emit gameWon();
-        stopGame();
-    }
-}
 
 void GameController::initializeStories()
 {
+    // 定义图片资源路径，与8个物品类型一一对应
+    QString storyImagePaths[8] = {
+        ":/new/prefix1/story01.png",
+        ":/new/prefix1/story02.png",
+        ":/new/prefix1/story03.png",
+        ":/new/prefix1/story04.png",
+        ":/new/prefix1/story05.png",
+        ":/new/prefix1/story06.png",
+        ":/new/prefix1/story07.png",
+        ":/new/prefix1/story08.png",
+    };
+
     for (int i = 0; i < 8; ++i) {
         StoryFragment* fragment = new StoryFragment(this);
-        QString story = QString("这是第%1个故事碎片。\n\n").arg(i + 1);
+        QString story = QString("这是第%1个故事碎片\n\n").arg(i + 1);
 
+        // 【请将以下case 0到case 7的占位文本替换成您自己的小王子故事文本】
         switch (i) {
-        case 0: story += "在迷宫深处，有一个古老的传说..."; break;
-        case 1: story += "勇敢的冒险者曾在这里留下足迹..."; break;
-        case 2: story += "墙壁上刻着神秘的符号..."; break;
-        case 3: story += "黑暗中闪烁着微弱的光芒..."; break;
-        case 4: story += "远处传来奇怪的声音..."; break;
-        case 5: story += "这里曾经是王国的宝库..."; break;
-        case 6: story += "传说中，有个人收集了所有碎片..."; break;
-        case 7: story += "最后的碎片，通往自由的钥匙..."; break;
+        case 0:
+            story +="收集到了一条金色的蛇\n" " \n""就是它咬了我\n""不痛，像被针扎了一下\n""然后我就来到了这里\n""我是谁？这是哪里？";
+            break;
+        case 1:
+            story += "收集到了一幅画\n"" \n""我记得它的作者是地球上的一个飞行员，\n""我们在地球的沙漠中相遇，\n""画里是蟒蛇吞下了一头大象。";
+            break;
+        case 2:
+            story += "收集到了一棵猴面包树\n"" \n""我记得这个植物！\n""它很危险,必须每天清理。\n""对了，这是我星球上的植物，\n""我的星球很小，有三座火山\n""我是来自B-612星球的小王子！";
+            break;
+        case 3:
+            story += "收集到了王冠和权杖\n"" \n""这应该来自我去过的一颗星球。\n""星球有一位国王，这大概是他的物品\n""他统治着一切。\n""不，他只统治他自己。\n""审判自己比审判别人难得多。";
+            break;
+        case 4:
+            story +="收集到了一张账单\n" " \n""四亿九千九百九十九万九千九百九十一颗星星\n""他把星星锁在抽屉里，说拥有了它们。\n""但拥有到底是什么？\n""我想起了我的玫瑰...";
+            break;
+        case 5:
+            story += "收集到了一个路灯\n"" \n""这应该来自于我去过的一颗星球。\n""这个星球每分钟转一圈。\n""星球上有一个点灯人，他没有休息日，\n""但他点亮了某样东西。";
+            break;
+        case 6:
+            story += "收集到了一棵麦穗\n"" \n""“重要的东西用眼睛是看不见的，\n""要用心去看。”\n""我想起来了，是狐狸教会了我。";
+            break;
+        case 7:
+            story += "收集到了玻璃罩与玫瑰\n"" \n""她总是怕风，\n""所以，我给她做了一个玻璃罩。\n""她是我独一无二的玫瑰。\n""我要回去，回到我的玫瑰身边！";
+            break;
         }
 
         fragment->setContent(story);
+        // +++ 关键：为每个故事碎片数据模型设置对应的图片路径 +++
+        fragment->setImagePath(storyImagePaths[i]);
+
         storyFragments.append(fragment);
     }
 }

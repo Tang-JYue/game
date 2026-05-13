@@ -29,7 +29,6 @@ void HealthView::setGameController(GameController *controller)
         // 立即获取游戏数据
         currentScore = gameController->getTotalScore();
         itemsCollected = gameController->getItemsCollected();
-        doorOpen = gameController->isDoorOpen();
     }
     update();
 }
@@ -43,7 +42,6 @@ void HealthView::updateDisplay()
     if (gameController) {
         currentScore = gameController->getTotalScore();
         itemsCollected = gameController->getItemsCollected();
-        doorOpen = gameController->isDoorOpen();
     }
     update();
 }
@@ -137,7 +135,7 @@ void HealthView::paintEvent(QPaintEvent *event)
     int targetSectionX = sectionWidth * 2;
 
     painter.setPen(QColor(100, 255, 100));  // 绿色
-    QString targetText = QString("目标: 560");
+    QString targetText = QString("目标: 612");
     painter.drawText(targetSectionX, startY + 30, targetText);
 
     // 绘制分隔线

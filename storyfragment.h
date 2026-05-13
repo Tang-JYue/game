@@ -19,6 +19,9 @@ public:
     void setRead(bool read);
     bool isRead() const;
 
+    void setImagePath(const QString& path);
+    QString getImagePath() const;
+
     // 重置
     void reset();
 
@@ -28,6 +31,7 @@ signals:
 private:
     QString content;
     bool read = false;
+    QString imagePath;
 };
 
 #endif // STORYFRAGMENT_H

@@ -1,8 +1,11 @@
 #include "gamewindow.h"
+#include "finalstoryview.h"
 #include <QApplication>
 #include <QMessageBox>
 #include <QDebug>
 #include <QCloseEvent>
+#include <QPainter>
+#include <QPen>
 
 #include "player.h"
 #include "playerview.h"
@@ -11,8 +14,9 @@
 #include "healthview.h"
 #include "item.h"
 #include "itemview.h"
-#include "door.h"
 #include "gamecontroller.h"
+#include "storyfragmentview.h"
+
 
 GameWindow::GameWindow(QWidget *parent) : QWidget(parent)
 {
@@ -21,7 +25,6 @@ GameWindow::GameWindow(QWidget *parent) : QWidget(parent)
     // 创建游戏对象
     wall = new Wall();
     player = new Player();
-    door = new Door();
 
     // 计算窗口大小
     int mazeWidth = wall->getCols() * wall->getCellSize();
@@ -44,7 +47,6 @@ GameWindow::~GameWindow()
     delete gameController;
     delete player;
     delete wall;
-    delete door;
     qDebug() << "游戏窗口销毁";
 }
 
@@ -97,7 +99,7 @@ void GameWindow::setupUI()
 
     // 7. 创建游戏控制器
     gameController = new GameController(this);
-    gameController->initialize(player, playerView, wall, healthView, itemView, door);
+    gameController->initialize(player, playerView, wall, healthView, itemView);
     healthView->setGameController(gameController);
 
     // 8. 连接信号
@@ -105,20 +107,23 @@ void GameWindow::setupUI()
             this, &GameWindow::onCollision);
     connect(gameController, &GameController::itemCollected,
             this, &GameWindow::onItemCollected);
-    connect(gameController, &GameController::doorOpened,
-            this, &GameWindow::onDoorOpened);
+    //++++++++
+    connect(gameController, &GameController::finalStoryTriggered,
+            this, &GameWindow::onFinalStoryTriggered);
+    //+++++++++
     connect(gameController, &GameController::gameWon,
             this, &GameWindow::onGameWon);
     connect(gameController, &GameController::showItemPrompt,
             this, &GameWindow::onShowItemPrompt);
-    connect(gameController, &GameController::showStoryDialog,
-            this, &GameWindow::onShowStoryDialog);
+    connect(gameController, &GameController::showStoryFragmentView,
+            this, &GameWindow::onShowStoryFragmentView);
     connect(player, &Player::playerDied,
             this, &GameWindow::onPlayerDied);
     connect(player, &Player::positionChanged,
             playerView, QOverload<>::of(&QWidget::update));
     connect(player, &Player::healthChanged,
             healthView, &HealthView::updateDisplay);
+
 
     // 启动游戏
     gameController->startGame();
@@ -132,7 +137,7 @@ void GameWindow::setupUI()
     qDebug() << "  空格     - 暂停/继续游戏";
     qDebug() << "  ESC      - 退出游戏";
     qDebug() << "注意：撞墙会减少1点血量！";
-    qDebug() << "目标：收集物品达到560分打开门";
+    qDebug() << "目标：收集物品达到612分";
     qDebug() << "==========================";
 }
 
@@ -176,7 +181,8 @@ void GameWindow::onPlayerDied()
     }
 
     QMessageBox::critical(this, "游戏结束",
-        "你被墙壁撞死了！\n"
+        "很遗憾，游戏失败，你将永远留在迷宫\n"
+        "达成结局：迷宫中的幽灵\n"
         "最终分数: " + QString::number(gameController->getTotalScore()) + "\n"
         "收集物品: " + QString::number(gameController->getItemsCollected()) + "个");
 
@@ -191,32 +197,11 @@ void GameWindow::onItemCollected(int score, int total)
     if (healthView) {
         healthView->updateDisplay();
     }
-
-    // 如果达到目标分数，显示提示
-    if (total >= 560) {
-        QMessageBox::information(this, "恭喜！",
-            "你已经收集了560分！\n"
-            "门已打开，现在可以进入门内获得胜利！");
-    }
-}
-
-void GameWindow::onDoorOpened()
-{
-    qDebug() << "门已打开！";
-
-    QMessageBox::information(this, "门已打开",
-        "门已经打开了！\n"
-        "前往迷宫右下角进入门内获得胜利！");
 }
 
 void GameWindow::onGameWon()
 {
-    QMessageBox::information(this, "游戏胜利！",
-        "恭喜你获胜！\n"
-        "最终分数: " + QString::number(gameController->getTotalScore()) + "\n"
-        "收集物品: " + QString::number(gameController->getItemsCollected()) + "个");
-
-    onRestartGame();
+     qDebug() << "游戏胜利，分数已达到最终目标！";
 }
 
 void GameWindow::onShowItemPrompt(Item* item)
@@ -233,10 +218,44 @@ void GameWindow::onShowItemPrompt(Item* item)
     }
 }
 
-void GameWindow::onShowStoryDialog(const QString& story)
+void GameWindow::onShowStoryFragmentView(const QString& story, const QString& imagePath)
 {
-    QMessageBox::information(this, "故事碎片", story);
+    // 游戏暂停，确保弹出对话框时游戏逻辑暂停
+    if (gameController && gameController->getGameState() == GameController::Running) {
+        gameController->pauseGame();
+    }
+
+    // 创建并显示新的故事碎片视图 (StoryFragmentView)
+    StoryFragmentView *view = new StoryFragmentView(story, imagePath, this);
+    view->setAttribute(Qt::WA_DeleteOnClose); // 对话框关闭时自动删除
+    view->exec(); // 使用exec()模态显示，阻塞直到关闭
+
+    // 对话框关闭后，恢复游戏
+    if (gameController && gameController->getGameState() == GameController::Paused) {
+        gameController->resumeGame();
+    }
 }
+
+//+++ 新增槽函数：显示最终的故事（大结局） +++
+void GameWindow::onFinalStoryTriggered()
+{
+    // 游戏暂停
+    if (gameController && gameController->getGameState() == GameController::Running) {
+        gameController->pauseGame();
+    }
+
+    // 使用新的 FinalStoryView 显示最终故事
+    FinalStoryView *view = new FinalStoryView(this);
+    view->setAttribute(Qt::WA_DeleteOnClose);
+
+    // 连接对话框关闭信号
+    connect(view, &FinalStoryView::finished, this, [this](){
+        onRestartGame();
+    });
+
+    view->exec();
+}
+//++++++++++++++++++++++++++++++++++++++++++++
 
 void GameWindow::onRestartGame()
 {
@@ -251,13 +270,9 @@ void GameWindow::onRestartGame()
         delete player;
     }
 
-    if (door) {
-        delete door;
-    }
 
     // 重新创建对象
     player = new Player();
-    door = new Door();
 
     // 重新设置玩家位置
     float startX = 5 * wall->getCellSize() + wall->getCellSize()/2;
@@ -270,7 +285,7 @@ void GameWindow::onRestartGame()
 
     // 重新创建控制器
     gameController = new GameController(this);
-    gameController->initialize(player, playerView, wall, healthView, itemView, door);
+    gameController->initialize(player, playerView, wall, healthView, itemView);
     healthView->setGameController(gameController);
 
     // 重新连接信号
@@ -278,14 +293,12 @@ void GameWindow::onRestartGame()
             this, &GameWindow::onCollision);
     connect(gameController, &GameController::itemCollected,
             this, &GameWindow::onItemCollected);
-    connect(gameController, &GameController::doorOpened,
-            this, &GameWindow::onDoorOpened);
     connect(gameController, &GameController::gameWon,
             this, &GameWindow::onGameWon);
     connect(gameController, &GameController::showItemPrompt,
             this, &GameWindow::onShowItemPrompt);
-    connect(gameController, &GameController::showStoryDialog,
-            this, &GameWindow::onShowStoryDialog);
+    connect(gameController, &GameController::showStoryFragmentView,
+            this, &GameWindow::onShowStoryFragmentView);
     connect(player, &Player::playerDied,
             this, &GameWindow::onPlayerDied);
     connect(player, &Player::positionChanged,
@@ -301,3 +314,4 @@ void GameWindow::onQuitGame()
 {
     close();
 }
+

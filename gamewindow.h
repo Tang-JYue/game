@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QKeyEvent>
 #include <QCloseEvent>
+#include <QMainWindow>
+#include <QPainter>
 
 // 前向声明
 class Player;
@@ -13,7 +15,6 @@ class WallView;
 class HealthView;
 class Item;
 class ItemView;
-class Door;
 class GameController;
 
 class GameWindow : public QWidget
@@ -33,12 +34,14 @@ private slots:
     void onCollision();
     void onPlayerDied();
     void onItemCollected(int score, int total);
-    void onDoorOpened();
     void onGameWon();
     void onShowItemPrompt(Item* item);
-    void onShowStoryDialog(const QString& story);
+    void onShowStoryFragmentView(const QString& story, const QString& imagePath);
     void onRestartGame();
     void onQuitGame();
+    //+++++++++++++++++++++++++
+    void onFinalStoryTriggered();
+    //++++++++++++++++++++++++++++++
 
 private:
     void setupUI();
@@ -50,7 +53,6 @@ private:
     WallView* wallView = nullptr;
     HealthView* healthView = nullptr;
     ItemView* itemView = nullptr;
-    Door* door = nullptr;
     GameController* gameController = nullptr;
 };
 

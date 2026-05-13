@@ -27,7 +27,6 @@ SOURCES += \
     main.cpp \
     wall.cpp \
     wallview.cpp \
-    door.cpp \
     gamecontroller.cpp \
     healthview.cpp \
     item.cpp \
@@ -36,11 +35,12 @@ SOURCES += \
     playerview.cpp \
     storyfragment.cpp \
     gamewindow.cpp \
+    storyfragmentview.cpp \
+    finalstoryview.cpp \
 
 HEADERS += \
     wall.h \
     wallview.h \
-    door.h \
     gamecontroller.h \
     healthview.h \
     item.h \
@@ -49,6 +49,8 @@ HEADERS += \
     playerview.h \
     storyfragment.h \
     gamewindow.h \
+    storyfragmentview.h \
+    finalstoryview.h \
 
 RESOURCES += \
     resources.qrc

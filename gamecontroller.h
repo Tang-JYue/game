@@ -12,7 +12,6 @@ class Wall;
 class HealthView;
 class Item;
 class ItemView;
-class Door;
 class StoryFragment;
 class QKeyEvent;
 
@@ -28,7 +27,7 @@ public:
 
     // 初始化
     void initialize(Player* player, PlayerView* playerView, Wall* wall,
-                    HealthView* healthView, ItemView* itemView, Door* door);
+                    HealthView* healthView, ItemView* itemView);
 
     // 游戏控制
     void startGame();
@@ -44,7 +43,6 @@ public:
     GameState getGameState() const;
     int getTotalScore() const;
     int getItemsCollected() const;
-    bool isDoorOpen() const;
 
     // 获取当前物品
     Item* getCurrentItem() const;
@@ -70,10 +68,12 @@ signals:
     void gameWon();
 
     void itemCollected(int score, int totalScore);
-    void showStoryDialog(const QString& story);
+    void showStoryFragmentView(const QString& story, const QString& imagePath);
     void showItemPrompt(Item* item);
     void collisionDetected();
-    void doorOpened();
+    //+++++++++++
+    void finalStoryTriggered();
+    //+++++++++++++
 
 private slots:
     void updateGame();
@@ -89,7 +89,6 @@ private:
     Wall* wall = nullptr;
     HealthView* healthView = nullptr;
     ItemView* itemView = nullptr;
-    Door* door = nullptr;
 
     // 游戏逻辑
     QTimer* gameTimer = nullptr;
@@ -102,7 +101,6 @@ private:
     // 分数和血量
     int totalScore = 0;
     int itemsCollected = 0;
-    bool doorOpen = false;
     QString currentStory;
 
     // 故事碎片
@@ -129,7 +127,6 @@ private:
     void checkBoundaries();
     void processWallCollision();
     void processItemCollision();
-    void processDoorCollision();
 
     // 位置生成
     QPointF getRandomValidPosition();

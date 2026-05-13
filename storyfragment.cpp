@@ -32,6 +32,13 @@ bool StoryFragment::isRead() const
     return read;
 }
 
+void StoryFragment::setImagePath(const QString& path) {
+    imagePath = path;
+}
+QString StoryFragment::getImagePath() const {
+    return imagePath;
+}
+
 void StoryFragment::reset()
 {
     read = false;

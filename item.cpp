@@ -2,7 +2,9 @@
 #include <QDebug>
 
 // 物品分数配置
-const int Item::ITEM_SCORES[8] = {1, 2, 3, 5, 8, 10, 15, 20};
+//const int Item::ITEM_SCORES[8] = {12, 18, 25, 35, 48, 64, 85, 110};
+const int Item::ITEM_SCORES[8] = {612, 612,612, 612,612, 612,612, 612};
+
 
 // 物品图片路径
 const QString Item::ITEM_PATHS[8] = {

@@ -10,5 +10,15 @@
         <file>item08.png</file>
         <file>player.png</file>
         <file>wall1.png</file>
+        <file>story01.png</file>
+        <file>story02.png</file>
+        <file>story03.png</file>
+        <file>story04.png</file>
+        <file>story05.png</file>
+        <file>story06.png</file>
+        <file>story07.png</file>
+        <file>story08.png</file>
+        <file>background.png</file>
+        <file>background2.png</file>
     </qresource>
 </RCC>
