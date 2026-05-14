@@ -1,6 +1,5 @@
 #include "itemview.h"
 #include <QPainter>
-#include <QDebug>
 #include <QFile>
 
 ItemView::ItemView(QWidget *parent) : QWidget(parent)

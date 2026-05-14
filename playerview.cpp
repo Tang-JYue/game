@@ -1,7 +1,7 @@
 #include "playerview.h"
 #include "player.h"
 #include <QPainter>
-#include <QDebug>
+#include<QDebug>
 
 PlayerView::PlayerView(QWidget *parent) : QWidget(parent)
 {
@@ -23,15 +23,14 @@ void PlayerView::setImage(const QString& imagePath)
         if (tempPixmap.load(imagePath)) {
             // 加载成功，使用原始图片
             playerImage = tempPixmap;
-            qDebug() << "玩家图片加载成功:" << imagePath;
         } else {
             // 加载失败，使用默认图片
-            createDefaultPlayerImage();
             qDebug() << "玩家图片加载失败，使用默认图片";
+            createDefaultPlayerImage();
         }
     } else {
-        createDefaultPlayerImage();
         qDebug() << "玩家图片路径为空，使用默认图片";
+        createDefaultPlayerImage();
     }
     update();
 }

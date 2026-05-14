@@ -130,7 +130,6 @@ void StoryFragmentView::loadBackgroundImage()
                 Qt::KeepAspectRatioByExpanding,  // 保持比例，可能裁剪
                 Qt::SmoothTransformation
             );
-            qDebug() << "故事弹窗背景图加载成功:" << bgPath;
         } else {
             qWarning() << "无法加载故事弹窗背景图:" << bgPath;
         }

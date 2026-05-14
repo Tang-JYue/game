@@ -1,5 +1,4 @@
 #include "storyfragment.h"
-#include <QDebug>
 
 StoryFragment::StoryFragment(QObject *parent) : QObject(parent)
 {
@@ -19,27 +18,9 @@ QString StoryFragment::getContent() const
     return content;
 }
 
-void StoryFragment::setRead(bool isRead)
-{
-    if (read != isRead) {
-        read = isRead;
-        emit fragmentRead(read);
-    }
-}
-
-bool StoryFragment::isRead() const
-{
-    return read;
-}
-
 void StoryFragment::setImagePath(const QString& path) {
     imagePath = path;
 }
 QString StoryFragment::getImagePath() const {
     return imagePath;
-}
-
-void StoryFragment::reset()
-{
-    read = false;
 }

@@ -48,9 +48,12 @@ public:
     void heal(int amount);
     bool isDead() const;
 
+    // +++获取玩家唯一ID
+        quint64 getInstanceId() const;
+
 signals:
     void healthChanged(int health, int maxHealth);
-    void playerDied();
+     void playerDied(quint64 instanceId); // +++添加参数
     void positionChanged();
 
 private:
@@ -68,6 +71,10 @@ private:
     // 血量
     int health = 5;
     int maxHealth = 5;
+
+    // +++每个Player对象的唯一标识符
+       quint64 m_instanceId = 0;
+       static quint64 s_nextInstanceId; // 静态计数器
 };
 
 #endif // PLAYER_H

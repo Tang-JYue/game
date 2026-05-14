@@ -17,10 +17,6 @@ public:
     explicit FailView(QWidget *parent = nullptr);
     ~FailView();
 
-signals:
-    void restartRequested();
-    void quitRequested();
-
 protected:
     void paintEvent(QPaintEvent *event) override;
 

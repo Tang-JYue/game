@@ -1,8 +1,11 @@
 #include "player.h"
-#include <QDebug>
+quint64 Player::s_nextInstanceId = 1;
 
 Player::Player(QObject *parent) : QObject(parent)
 {
+    //为新玩家分配唯一ID
+       m_instanceId = s_nextInstanceId++;
+
     // 初始位置 - 在迷宫中找到一个安全的起始位置
     // 检查迷宫数据，找到第3行第5列是通道(0)
     // 网格坐标(3,5)对应的世界坐标:
@@ -14,24 +17,9 @@ Player::Player(QObject *parent) : QObject(parent)
     width = 18.0f;
     height = 30.0f;
 
-    // 设置血量 - 确保一开始是满的
+    // 设置血量
     maxHealth = 5;
-    health = maxHealth;  // 确保血量是满的
-
-    // 确保血量是满的，修复可能的初始化问题
-    if (health != maxHealth) {
-        health = maxHealth;
-        qDebug() << "修复血量初始化问题，将血量设置为满值:" << health << "/" << maxHealth;
-    }
-
-    qDebug() << "玩家创建，尺寸:" << width << "x" << height;
-    qDebug() << "玩家初始位置:(" << position.x() << "," << position.y() << ")";
-    qDebug() << "玩家初始血量:" << health << "/" << maxHealth;
-
-    // 检查边界框
-    QRectF bbox = getBoundingBox();
-    qDebug() << "玩家边界框:左上(" << bbox.left() << "," << bbox.top()
-             << ") 右下(" << bbox.right() << "," << bbox.bottom() << ")";
+    health = maxHealth;
 }
 
 QPointF Player::getPosition() const
@@ -58,7 +46,6 @@ void Player::moveUp()
     moveX = 0;
     moveY = -1;
     moving = true;
-    qDebug() << "玩家: 向上移动";
 }
 
 void Player::moveDown()
@@ -66,7 +53,6 @@ void Player::moveDown()
     moveX = 0;
     moveY = 1;
     moving = true;
-    qDebug() << "玩家: 向下移动";
 }
 
 void Player::moveLeft()
@@ -74,7 +60,6 @@ void Player::moveLeft()
     moveX = -1;
     moveY = 0;
     moving = true;
-    qDebug() << "玩家: 向左移动";
 }
 
 void Player::moveRight()
@@ -82,7 +67,6 @@ void Player::moveRight()
     moveX = 1;
     moveY = 0;
     moving = true;
-    qDebug() << "玩家: 向右移动";
 }
 
 void Player::stop()
@@ -90,7 +74,6 @@ void Player::stop()
     moveX = 0;
     moveY = 0;
     moving = false;
-    qDebug() << "玩家: 停止移动";
 }
 
 void Player::updatePosition()
@@ -152,13 +135,9 @@ int Player::getMaxHealth() const
 void Player::setHealth(int newHealth)
 {
     if (newHealth >= 0 && newHealth <= maxHealth && newHealth != health) {
-        health = newHealth;
-        emit healthChanged(health, maxHealth);
-
-        if (health <= 0) {
-            emit playerDied();
+            health = newHealth;
+            emit healthChanged(health, maxHealth);
         }
-    }
 }
 
 void Player::setMaxHealth(int newMaxHealth)
@@ -178,7 +157,6 @@ void Player::takeDamage(int damage)
         int newHealth = health - damage;
         if (newHealth < 0) newHealth = 0;
         setHealth(newHealth);
-        qDebug() << "玩家受到伤害:" << damage << "点，剩余血量:" << newHealth;
     }
 }
 
@@ -194,4 +172,9 @@ void Player::heal(int amount)
 bool Player::isDead() const
 {
     return health <= 0;
+}
+//实现获取ID的函数
+quint64 Player::getInstanceId() const
+{
+    return m_instanceId;
 }

@@ -2,7 +2,6 @@
 #include "player.h"
 #include "gamecontroller.h"
 #include <QPainter>
-#include <QDebug>
 #include <QLinearGradient>
 
 HealthView::HealthView(QWidget *parent) : QWidget(parent)

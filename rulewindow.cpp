@@ -122,7 +122,7 @@ RuleWindow::RuleWindow(QWidget *parent)
         "<p>• 屏幕顶部有血量显示</p>"
 
         "<h2 style='color:#f8f8a0;'>📊 分数系统</h2>"
-        "<p>• 每个物品价值<strong>...分不等</strong></p>"
+        "<p>• 每个物品价值<strong>12, 18, 25, 35, 48, 64, 85, 110分不等</strong></p>"
         "<p>• 达到612分后触发最终结局</p>"
 
         // 开始提示
@@ -192,13 +192,10 @@ RuleWindow::RuleWindow(QWidget *parent)
 
     // 连接按钮信号
     connect(m_continueButton, &QPushButton::clicked, this, &RuleWindow::onContinueButtonClicked);
-
-    qDebug() << "RuleWindow 创建完成";
 }
 
 void RuleWindow::onContinueButtonClicked()
 {
-    qDebug() << "点击了【继续】按钮";
     emit continueButtonClicked();
 }
 
@@ -213,7 +210,6 @@ void RuleWindow::loadBackgroundImage()
                 Qt::IgnoreAspectRatio,
                 Qt::SmoothTransformation
             );
-            qDebug() << "RuleWindow 背景图加载成功:" << bgPath;
         } else {
             qWarning() << "无法加载 RuleWindow 背景图:" << bgPath;
         }

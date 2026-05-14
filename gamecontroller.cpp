@@ -21,10 +21,6 @@
 // 全局随机数种子
 static bool randomSeeded = false;
 
-// 在.cpp文件中定义常量
-const int GameController::DOOR_SCORE_THRESHOLD = 612;
-const int GameController::COLLISION_COOLDOWN_FRAMES = 10;
-
 GameController::GameController(QObject *parent) : QObject(parent)
 {
     if (!randomSeeded) {
@@ -34,18 +30,17 @@ GameController::GameController(QObject *parent) : QObject(parent)
 
     gameTimer = new QTimer(this);
     connect(gameTimer, &QTimer::timeout, this, &GameController::updateGame);
-    qDebug() << "游戏控制器创建";
     initializeStories();
 }
 
 GameController::~GameController()
 {
+    stopGame();
     clearItems();
     for (StoryFragment* fragment : storyFragments) {
         delete fragment;
     }
     storyFragments.clear();
-    qDebug() << "游戏控制器销毁";
 }
 
 void GameController::initialize(Player* p, PlayerView* pv, Wall* w,
@@ -76,7 +71,6 @@ void GameController::initialize(Player* p, PlayerView* pv, Wall* w,
     generateItems(8);
 
     qDebug() << "游戏控制器初始化完成";
-    qDebug() << "目标: 收集612分";
 }
 
 void GameController::startGame()
@@ -118,6 +112,7 @@ void GameController::resumeGame()
         qDebug() << "游戏继续";
     }
 }
+
 
 void GameController::handleKeyPress(QKeyEvent* event)
 {
@@ -216,18 +211,17 @@ void GameController::clearItems()
     }
     items.clear();
     currentItem = nullptr;
-    qDebug() << "已清空所有物品";
 }
 
 void GameController::collectCurrentItem()
 {
-    // === 1. 基础检查 ===
+    // 1. 基础检查
     if (!currentItem || currentItem->isCollected()) {
         qDebug() << "[GameController] 收集物品失败: 物品无效或已收集";
         return;
     }
 
-    // === 2. 执行收集 ===
+    // 2. 执行收集
     currentItem->setCollected(true);
     int score = currentItem->getScore();
     totalScore += score;
@@ -237,27 +231,19 @@ void GameController::collectCurrentItem()
     currentItem->setShowPrompt(false);
 
     if (totalScore >= DOOR_SCORE_THRESHOLD) {
-        qDebug() << "★★★★★★★★★★★★★★★★★★★★★★★★";
-        qDebug() << "★ 分数达标！触发最终结局。 ★";
-        qDebug() << "★ 总收集物品:" << itemsCollected << "个 ★";
-        qDebug() << "★ 最终分数:" << totalScore << "分 ★";
-        qDebug() << "★★★★★★★★★★★★★★★★★★★★★★★★";
-
         // 发射最终故事信号
          emit finalStoryTriggered();
 
         // 游戏胜利，停止游戏循环
         emit gameWon();
         stopGame();
-        return; // 重要：触发结局后，直接返回，不再执行后续的 currentItem = nullptr 等清理
+        return; //触发结局后，直接返回，不再执行后续的 currentItem = nullptr 等清理
     }
 
-    // === 5. 后续清理 ===
+    // 3. 后续清理
     currentItem = nullptr;
     if (itemView) itemView->setItems(items);
     if (healthView) healthView->updateDisplay();
-
-    qDebug() << "[GameController] collectCurrentItem 函数结束";
 }
 
 void GameController::readCurrentItemStory()
@@ -267,11 +253,7 @@ void GameController::readCurrentItemStory()
     int itemType = currentItem->getType();
     if (itemType >= 0 && itemType < storyFragments.size()) {
         StoryFragment* fragment = storyFragments[itemType];
-        if (!fragment->isRead()) {
-            fragment->setRead(true);
-            emit showStoryFragmentView(fragment->getContent(), fragment->getImagePath());
-            qDebug() << "阅读故事碎片" << itemType + 1;
-        }
+        emit showStoryFragmentView(fragment->getContent(), fragment->getImagePath());
     }
 }
 
@@ -376,12 +358,16 @@ void GameController::processWallCollision()
         emit collisionDetected();
 
         int damage = wall->getDamage();
+        int oldHealth = player->getHealth(); // 记录扣血前的血量
         player->takeDamage(damage);
-        qDebug() << "撞墙扣血:" << damage << "点，剩余血量:" << player->getHealth();
+        int newHealth = player->getHealth(); // 获取扣血后的血量
 
-        if (player->isDead()) {
-            qDebug() << "玩家死亡！";
+        // 在GameController中同步判断并触发死亡
+        if (newHealth <= 0 && oldHealth > 0) {
+            // 1. 先停止游戏（同步）
             stopGame();
+            // 2. 再发射死亡信号（同步，确保时序）
+            emit playerDied(player->getInstanceId());
         }
     }
 }
@@ -476,7 +462,6 @@ void GameController::initializeStories()
         }
 
         fragment->setContent(story);
-        // +++ 关键：为每个故事碎片数据模型设置对应的图片路径 +++
         fragment->setImagePath(storyImagePaths[i]);
 
         storyFragments.append(fragment);
@@ -596,14 +581,10 @@ void GameController::generateItemsSimple(int count)
     }
 
     clearItems();
-    qDebug() << "开始使用修复算法生成物品，目标数量:" << count;
 
     int rows = wall->getRows();
     int cols = wall->getCols();
     int cellSize = wall->getCellSize();
-
-    qDebug() << "迷宫尺寸: " << rows << "x" << cols << "，单元格大小:" << cellSize;
-    qDebug() << "寻找40x40通道区域(2x2的0区域)...";
 
     // 步骤1: 收集所有40x40通道区域的中心点
     QVector<QPointF> fortyFortyCenters;
@@ -627,8 +608,6 @@ void GameController::generateItemsSimple(int count)
         }
     }
 
-    qDebug() << "找到" << fortyFortyCenters.size() << "个40x40通道区域";
-
     if (fortyFortyCenters.isEmpty()) {
         qDebug() << "错误：没有找到任何40x40通道区域！尝试备用方案...";
 
@@ -647,8 +626,6 @@ void GameController::generateItemsSimple(int count)
                 }
             }
         }
-
-        qDebug() << "备用方案：找到" << allCenters.size() << "个单个通道位置";
         fortyFortyCenters = allCenters;
     }
 
@@ -714,12 +691,8 @@ void GameController::generateItemsSimple(int count)
         newItem->setPosition(center.x(), center.y());
         items.append(newItem);
         generated++;
-
-        qDebug() << "生成物品" << generated << "类型" << itemType
-                 << "在40x40通道中心(" << center.x() << "," << center.y() << ")";
     }
 
-    qDebug() << "修复算法生成了" << generated << "个物品";
 
     if (itemView) {
         itemView->setItems(items);
@@ -729,12 +702,9 @@ void GameController::generateItemsSimple(int count)
 // 主物品生成函数
 void GameController::generateItems(int count)
 {
-    qDebug() << "使用修复的物品生成算法...";
     generateItemsSimple(count);
 
     if (items.size() < count) {
-        qDebug() << "第一次尝试只生成了" << items.size() << "个物品，尝试放宽条件...";
-
         int remaining = count - items.size();
         int attempts = 0;
         int maxAttempts = remaining * 100;
@@ -815,12 +785,8 @@ void GameController::generateItems(int count)
             newItem->setType(itemType);
             newItem->setPosition(pos.x(), pos.y());
             items.append(newItem);
-
-            qDebug() << "放宽条件生成物品" << items.size() << "在位置(" << pos.x() << "," << pos.y() << ")";
         }
     }
-
-    qDebug() << "物品生成完成，共生成" << items.size() << "个物品";
 
     if (items.size() > 0) {
         QMap<int, int> typeCount;
@@ -831,15 +797,6 @@ void GameController::generateItems(int count)
             typeCount[type] = typeCount.value(type, 0) + 1;
             totalScorePotential += item->getScore();
         }
-
-        qDebug() << "物品类型分布:";
-        for (int i = 0; i < 8; ++i) {
-            int count = typeCount.value(i, 0);
-            if (count > 0) {
-                qDebug() << "  类型" << i << "(" << count << "个) 分数:" << Item::getScoreByType(i);
-            }
-        }
-        qDebug() << "所有物品总分数:" << totalScorePotential << "分";
 
         // 计算物品间平均距离
         if (items.size() > 1) {
@@ -854,11 +811,6 @@ void GameController::generateItems(int count)
                     totalDistance += distance;
                     pairCount++;
                 }
-            }
-
-            if (pairCount > 0) {
-                float avgDistance = totalDistance / pairCount;
-                qDebug() << "物品间平均距离:" << avgDistance << "像素";
             }
         }
     }

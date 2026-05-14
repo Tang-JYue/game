@@ -26,8 +26,6 @@ FailView::FailView(QWidget *parent)
 
     // 设置UI
     setupUI();
-
-    qDebug() << "FailView 创建完成";
 }
 
 void FailView::setupUI()
@@ -192,16 +190,12 @@ void FailView::setupUI()
 
 void FailView::onRestartClicked()
 {
-    qDebug() << "用户点击 restart 按钮";
-    emit restartRequested();
-    this->accept();  // 关闭对话框
+    this->accept();  // 只调用 accept()
 }
 
 void FailView::onQuitClicked()
 {
-    qDebug() << "用户点击 off 按钮";
-    emit quitRequested();
-    this->reject();  // 关闭对话框
+    this->reject();  // 只调用 reject()
 }
 
 void FailView::loadBackgroundImage()
@@ -262,5 +256,4 @@ void FailView::paintEvent(QPaintEvent *event)
 
 FailView::~FailView()
 {
-    qDebug() << "FailView 销毁";
 }

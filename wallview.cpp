@@ -54,7 +54,6 @@ bool WallView::loadWallTexture(const QString& imagePath)
     if (tempPixmap.load(imagePath)) {
         // 缩放图片到20x20
         wallPixmap = tempPixmap.scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        qDebug() << "墙壁图片加载成功:" << imagePath;
         return true;
     } else {
         qDebug() << "墙壁图片加载失败:" << imagePath;

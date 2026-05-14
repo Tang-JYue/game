@@ -71,13 +71,11 @@ signals:
     void showStoryFragmentView(const QString& story, const QString& imagePath);
     void showItemPrompt(Item* item);
     void collisionDetected();
-    //+++++++++++
     void finalStoryTriggered();
-    //+++++++++++++
+    void playerDied(quint64 instanceId);
 
 private slots:
     void updateGame();
-    void readCurrentItemStory();
 
 private:
     // 游戏状态
@@ -108,10 +106,10 @@ private:
 
     // 碰撞检测
     int collisionCooldown = 0;
-    static const int COLLISION_COOLDOWN_FRAMES;
+    static constexpr int COLLISION_COOLDOWN_FRAMES = 10;
 
     // 开门分数阈值
-    static const int DOOR_SCORE_THRESHOLD;
+    static constexpr int DOOR_SCORE_THRESHOLD = 612;
 
     // 边界
     float minX = 0;
@@ -127,6 +125,7 @@ private:
     void checkBoundaries();
     void processWallCollision();
     void processItemCollision();
+    void readCurrentItemStory();
 
     // 位置生成
     QPointF getRandomValidPosition();

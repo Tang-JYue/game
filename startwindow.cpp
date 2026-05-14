@@ -175,18 +175,14 @@ StartWindow::StartWindow(QWidget *parent)
     // 8. 连接按钮信号
     connect(m_startButton, &QPushButton::clicked, this, &StartWindow::onStartButtonClicked);
     connect(m_quitButton, &QPushButton::clicked, this, &StartWindow::onQuitButtonClicked);
-
-    qDebug() << "StartWindow 创建完成，标题和按钮位置已下调";
 }
 void StartWindow::onStartButtonClicked()
 {
-    qDebug() << "点击了【开始游戏】按钮";
     emit startButtonClicked();
 }
 
 void StartWindow::onQuitButtonClicked()
 {
-    qDebug() << "点击了【退出游戏】按钮";
     emit quitButtonClicked();
 }
 
@@ -201,7 +197,6 @@ void StartWindow::loadBackgroundImage()
                 Qt::IgnoreAspectRatio,
                 Qt::SmoothTransformation
             );
-            qDebug() << "StartWindow 背景图加载成功:" << bgPath;
         } else {
             qWarning() << "无法加载 StartWindow 背景图:" << bgPath;
         }

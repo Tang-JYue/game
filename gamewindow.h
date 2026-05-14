@@ -31,11 +31,9 @@ protected:
     void closeEvent(QCloseEvent* event) override;
 
 private slots:
-    void onCollision();
-    void onPlayerDied();
+    void onPlayerDied(quint64 diedPlayerId);
     void onItemCollected(int score, int total);
     void onGameWon();
-    void onShowItemPrompt(Item* item);
     void onShowStoryFragmentView(const QString& story, const QString& imagePath);
     void onRestartGame();
     void onQuitGame();
@@ -43,6 +41,7 @@ private slots:
 
 private:
     void setupUI();
+
 
     // 游戏对象
     Player* player = nullptr;
@@ -52,6 +51,11 @@ private:
     HealthView* healthView = nullptr;
     ItemView* itemView = nullptr;
     GameController* gameController = nullptr;
+
+    //记录当前有效玩家的ID
+    quint64 m_currentValidPlayerId = 0;
+
+    QPointF findSafePlayerSpawn();
 };
 
 #endif // GAMEWINDOW_H

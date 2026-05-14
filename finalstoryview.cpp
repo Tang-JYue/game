@@ -179,7 +179,6 @@ FinalStoryView::FinalStoryView(QWidget *parent)
        connect(m_restartButton, &QPushButton::clicked, this, &FinalStoryView::accept);
        connect(m_quitButton, &QPushButton::clicked, this, &FinalStoryView::reject);
 
-       qDebug() << "FinalStoryView 创建完成，添加了两个按钮：restart 和 off";
    }
 
 // 加载背景图的函数
